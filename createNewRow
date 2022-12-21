@@ -1,0 +1,34 @@
+
+
+
+
+val rawData = Seq(
+    Row(Map("proximic" -> Row("en"))),
+    Row(Map("xxx" -> Row("en"))),
+    Row(null),
+    Row(Map("proximic" -> Row(null))),
+    Row(Map("proximic" -> Row("sp"))))
+
+    val contextualSchema = new StructType().add("contextualdata", MapType(StringType, new StructType().add("language", StringType, true), true))
+
+
+
+  val testDF2 = spark.createDataFrame(spark.sparkContext.parallelize(rawData),contextualSchema)
+
+  testDF2.foreach(bidRow => { 
+   val enrichmentLanguage =  Option(bidRow.getAs[Map[String, Row]]("contextualdata")) match {
+      case None => {
+      println("contextualdata is null") 
+      "null"}
+      case Some(contextual) =>  {contextual.get("proximic") match {
+        case None => {println("proximic is null ") 
+        "null"}
+        case Some(proximic) => {println(s"language is ${proximic.getAs[String]("language")}")
+         Option(proximic.getAs[String]("language")).getOrElse("null")}
+      }
+      }
+    }
+
+    println(s"enrichmentLanguage is ${enrichmentLanguage} ")
+    }
+  )
